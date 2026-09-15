@@ -33,7 +33,7 @@ variable "prefix" {
 variable "location" {
   description = "Azure region. Pick one close to you; some regions are cheaper than others."
   type        = string
-  default     = "centralindia" # try "eastus" or "westeurope" if quota issues
+  default     = "eastus"
 }
 
 variable "node_count" {
@@ -45,12 +45,11 @@ variable "node_count" {
 variable "node_vm_size" {
   description = <<EOT
 Cheap VM sizes suitable for AKS system nodes (need >=2 vCPU, >=4 GB RAM):
-  - Standard_B2s       : 2 vCPU / 4 GB   (burstable, ~$30/mo per node, widely available)
-  - Standard_B2als_v2  : 2 vCPU / 4 GB   (AMD burstable, often cheapest, newer regions only)
-  - Standard_D2as_v5   : 2 vCPU / 8 GB   (non-burstable, ~$70/mo per node, more headroom)
+  - Standard_D2as_v7  : 2 vCPU / 8 GB  (AMD, cheapest allowed option in this subscription)
+  - Standard_D2s_v7   : 2 vCPU / 8 GB  (Intel equivalent, slightly pricier)
 EOT
   type        = string
-  default     = "Standard_B2s"
+  default     = "Standard_D2as_v7"
 }
 
 ############################################
@@ -87,7 +86,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     auto_scaling_enabled = false
 
     # Put nodes in one zone to avoid cross-zone traffic charges
-    zones = ["1"]
+    # zones = ["1"]
 
     upgrade_settings {
       max_surge = "10%"
@@ -105,6 +104,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     network_plugin_mode = "overlay"
     network_policy      = "calico"
     load_balancer_sku   = "standard"
+    pod_cidr            = "10.244.0.0/16"
   }
 
  
